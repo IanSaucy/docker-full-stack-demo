@@ -1,13 +1,15 @@
 version: "3"
 services:
   postgres:
-    build: ./database
+    image: postgres
+    restart: always
     environment:
       POSTGRES_DB: todo
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-    ports:
-      - 5432
+      POSTGRES_HOST: postgres
+    volumes:
+      - './database:/docker-entrypoint-initdb.d/'
   go-api:
     build: ./backend
     ports:
@@ -16,7 +18,16 @@ services:
       - postgres
     links:
       - postgres
+    volumes:
+      - './backend:/build'
   react-app:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - './frontend:/app'
+      - '/app/node_modules'
     ports:
-      - 3000:3000
+      - 3001:3000
+    environment:
+      - CHOKIDAR_USEPOLLING=true
